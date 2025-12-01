@@ -2,10 +2,12 @@ using FinalPlayerController;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DefaultExecutionOrder(-2)]
 public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocotmotionMapActions
 {
    public PlayerControls PlayerControls {  get; private set; }
     public Vector2 MovementInput { get; private set; }
+    public Vector2 LookInput { get; private set; }
 
     private void OnEnable()
     {
@@ -27,5 +29,10 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocotm
         MovementInput = context.ReadValue<Vector2>();
         print(MovementInput);
 
+    }
+
+    public void OnLook(InputAction.CallbackContext context)
+    {
+        LookInput = context.ReadValue<Vector2>();
     }
 }
