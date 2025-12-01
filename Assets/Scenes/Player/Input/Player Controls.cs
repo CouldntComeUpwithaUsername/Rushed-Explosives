@@ -102,6 +102,15 @@ namespace FinalPlayerController
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Look"",
+                    ""type"": ""Value"",
+                    ""id"": ""d89e7a89-36e6-4164-852a-0ca3068eb3b4"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -159,6 +168,17 @@ namespace FinalPlayerController
                     ""action"": ""Movement"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""093aa7bb-ac84-4b71-b969-f8a472ee8418"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Look"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -168,6 +188,7 @@ namespace FinalPlayerController
             // PlayerLocotmotionMap
             m_PlayerLocotmotionMap = asset.FindActionMap("PlayerLocotmotionMap", throwIfNotFound: true);
             m_PlayerLocotmotionMap_Movement = m_PlayerLocotmotionMap.FindAction("Movement", throwIfNotFound: true);
+            m_PlayerLocotmotionMap_Look = m_PlayerLocotmotionMap.FindAction("Look", throwIfNotFound: true);
         }
 
         ~@PlayerControls()
@@ -249,6 +270,7 @@ namespace FinalPlayerController
         private readonly InputActionMap m_PlayerLocotmotionMap;
         private List<IPlayerLocotmotionMapActions> m_PlayerLocotmotionMapActionsCallbackInterfaces = new List<IPlayerLocotmotionMapActions>();
         private readonly InputAction m_PlayerLocotmotionMap_Movement;
+        private readonly InputAction m_PlayerLocotmotionMap_Look;
         /// <summary>
         /// Provides access to input actions defined in input action map "PlayerLocotmotionMap".
         /// </summary>
@@ -264,6 +286,10 @@ namespace FinalPlayerController
             /// Provides access to the underlying input action "PlayerLocotmotionMap/Movement".
             /// </summary>
             public InputAction @Movement => m_Wrapper.m_PlayerLocotmotionMap_Movement;
+            /// <summary>
+            /// Provides access to the underlying input action "PlayerLocotmotionMap/Look".
+            /// </summary>
+            public InputAction @Look => m_Wrapper.m_PlayerLocotmotionMap_Look;
             /// <summary>
             /// Provides access to the underlying input action map instance.
             /// </summary>
@@ -293,6 +319,9 @@ namespace FinalPlayerController
                 @Movement.started += instance.OnMovement;
                 @Movement.performed += instance.OnMovement;
                 @Movement.canceled += instance.OnMovement;
+                @Look.started += instance.OnLook;
+                @Look.performed += instance.OnLook;
+                @Look.canceled += instance.OnLook;
             }
 
             /// <summary>
@@ -307,6 +336,9 @@ namespace FinalPlayerController
                 @Movement.started -= instance.OnMovement;
                 @Movement.performed -= instance.OnMovement;
                 @Movement.canceled -= instance.OnMovement;
+                @Look.started -= instance.OnLook;
+                @Look.performed -= instance.OnLook;
+                @Look.canceled -= instance.OnLook;
             }
 
             /// <summary>
@@ -354,6 +386,13 @@ namespace FinalPlayerController
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnMovement(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnLook(InputAction.CallbackContext context);
         }
     }
 }
