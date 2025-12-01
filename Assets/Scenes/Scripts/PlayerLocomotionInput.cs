@@ -1,16 +1,31 @@
+using FinalPlayerController;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class PlayerLocomotionInput : MonoBehaviour
+public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocotmotionMapActions
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+   public PlayerControls PlayerControls {  get; private set; }
+    public Vector2 MovementInput { get; private set; }
+
+    private void OnEnable()
     {
-        
+        PlayerControls = new PlayerControls();
+        PlayerControls.Enable();
+
+        PlayerControls.PlayerLocotmotionMap.Enable();
+        PlayerControls.PlayerLocotmotionMap.SetCallbacks(this);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDisable()
     {
-        
+        PlayerControls.PlayerLocotmotionMap.Disable();
+        PlayerControls.PlayerLocotmotionMap.RemoveCallbacks(this);
+    }
+
+    public void OnMovement(InputAction.CallbackContext context)
+    {
+        MovementInput = context.ReadValue<Vector2>();
+        print(MovementInput);
+
     }
 }
