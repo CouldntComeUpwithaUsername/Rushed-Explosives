@@ -5,7 +5,10 @@ using UnityEngine.InputSystem;
 [DefaultExecutionOrder(-2)]
 public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocotmotionMapActions
 {
-   public PlayerControls PlayerControls {  get; private set; }
+    [SerializeField] private bool holdToSprint = true;
+
+    public bool SprintToggledOn { get; private set; }
+    public PlayerControls PlayerControls { get; private set; }
     public Vector2 MovementInput { get; private set; }
     public Vector2 LookInput { get; private set; }
 
@@ -34,5 +37,22 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocotm
     public void OnLook(InputAction.CallbackContext context)
     {
         LookInput = context.ReadValue<Vector2>();
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void OnToggleSprint(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            SprintToggledOn = holdToSprint || !SprintToggledOn;
+        }
+        else if (context.canceled)
+        {
+            SprintToggledOn = !holdToSprint && !SprintToggledOn;
+        }
     }
 }
