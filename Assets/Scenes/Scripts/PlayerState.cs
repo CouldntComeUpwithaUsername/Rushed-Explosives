@@ -14,7 +14,7 @@ public class PlayerState : MonoBehaviour
     { 
         Idling = 0,
         Walking = 1,
-        Running = 2,
+        Sprinting = 2,
         Jumping = 3,
         Sliding = 4,
         WallRunning = 5,

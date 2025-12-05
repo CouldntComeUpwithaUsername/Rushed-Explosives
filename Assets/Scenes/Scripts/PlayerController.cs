@@ -47,22 +47,29 @@ public class PlayerController : MonoBehaviour
     {
         bool isMovementInput = playerLocomotionInput.MovementInput != Vector2.zero;
         bool isMovingLaterally = IsMovingLaterally();
+        bool isSprinting = playerLocomotionInput.SprintToggledOn && isMovingLaterally;
 
-        PlayerMovementState lateralState = isMovingLaterally || isMovementInput ? PlayerMovementState.Running: PlayerMovementState.Idling;
+        PlayerMovementState lateralState = isSprinting ? PlayerMovementState.Sprinting :
+            isMovingLaterally || isMovementInput ? PlayerMovementState.Sprinting: PlayerMovementState.Idling;
         playerState.SetPlayerMovementState(lateralState);
     }
     private void HandleLateralMovement()
     {
+        bool isSprinting = playerState.CurrentPlayerMovementState = PlayerMovementState.Sprinting;
+
+        float lateralAcceleration = isSprinting ? sprintAcceleration : runAcceleration;
+        float clampLateralMagnitude = isSprinting ? sprintSpeed : runSpeed;
+
         Vector3 cameraForwardXZ = new Vector3(playerCamera.transform.forward.x, 0f, playerCamera.transform.forward.z).normalized;
         Vector3 cameraRightXZ = new Vector3(playerCamera.transform.right.x, 0f, playerCamera.transform.right.z).normalized;
         Vector3 movementDirection = cameraRightXZ * playerLocomotionInput.MovementInput.x + cameraForwardXZ * playerLocomotionInput.MovementInput.y;
 
-        Vector3 movementDelta = movementDirection * runAcceleration * Time.deltaTime;
+        Vector3 movementDelta = movementDirection * lateralAcceleration ;
         Vector3 newVelocity = characterController.velocity + movementDelta;
 
         Vector3 currentDrag = newVelocity.normalized * drag * Time.deltaTime;
         newVelocity = (newVelocity.magnitude > drag * Time.deltaTime) ? newVelocity - currentDrag : Vector3.zero;
-        newVelocity = Vector3.ClampMagnitude(newVelocity, runSpeed);
+        newVelocity = Vector3.ClampMagnitude(newVelocity, clampLateralMagnitude);
 
         characterController.Move(newVelocity * Time.deltaTime);
     }
