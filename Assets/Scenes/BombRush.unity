@@ -7926,6 +7926,22 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 2199558332559200367, guid: 7e9186dec4ce7f04c9a0191a009b2d11, type: 3}
+      propertyPath: drag
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 2199558332559200367, guid: 7e9186dec4ce7f04c9a0191a009b2d11, type: 3}
+      propertyPath: gravity
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 2199558332559200367, guid: 7e9186dec4ce7f04c9a0191a009b2d11, type: 3}
+      propertyPath: runSpeed
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2199558332559200367, guid: 7e9186dec4ce7f04c9a0191a009b2d11, type: 3}
+      propertyPath: sprintSpeed
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 3042978560276826751, guid: 7e9186dec4ce7f04c9a0191a009b2d11, type: 3}
       propertyPath: m_Layer
       value: 3
