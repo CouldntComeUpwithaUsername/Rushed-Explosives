@@ -8,12 +8,19 @@ public class PlayerState : MonoBehaviour
     {
         CurrentPlayerMovementState = playerMovementState;
     }
+    public bool InGroundedState()
+    {
+        return CurrentPlayerMovementState == PlayerMovementState.Idling ||
+            CurrentPlayerMovementState == PlayerMovementState.Running ||
+            CurrentPlayerMovementState == PlayerMovementState.Sprinting;
+
+    }
 }
     public enum PlayerMovementState
 
     { 
         Idling = 0,
-        Walking = 1,
+        Running = 1,
         Sprinting = 2,
         Jumping = 3,
         Sliding = 4,
