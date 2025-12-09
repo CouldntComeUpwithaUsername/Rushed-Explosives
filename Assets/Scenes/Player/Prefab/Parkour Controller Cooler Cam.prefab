@@ -81,43 +81,27 @@ MonoBehaviour:
   wallMask:
     serializedVersion: 2
     m_Bits: 128
-  playerCamera: {fileID: 6842085684799101638}
-  isGrounded: 0
-  isSprinting: 0
-  isCrouching: 0
-  isSliding: 0
-  isWallRunning: 0
-  onLeftWall: 0
-  onRightWall: 0
-  hasWallRun: 0
-  isClimibing: 0
-  canClimb: 0
-  hasClimbed: 0
-  normalFOV: 0
   speed: 0
-  gravity: 0
-  wallRunSpeedIncrease: 2
-  wallRunSpeedDecrease: 1.5
-  slideSpeedIncrease: 2.5
-  slideSpeedDecrease: 3
   runSpeed: 8
   sprintSpeed: 12
   crouchSpeed: 4
-  airSpeed: 0.3
-  climbSpeed: 5
+  airSpeedMultiplier: 2.5
+  climbSpeed: 10
   normalGravity: -13
   wallRunGravity: -1
   jumpHeight: 5
-  slideTimer: 2.5
+  slideSpeedIncrease: 2.5
+  wallRunSpeedIncrease: 2
+  slideSpeedDecrease: 3
+  wallRunSpeedDecrease: 1.5
   maxSlideTimer: 2
-  climbTimer: 0
-  MaxClimbTimer: 1
-  specialFOV: 120
-  CameraChange: 20
-  wallRuntilt: 20
+  maxClimbTimer: 1
+  maxWallJumpTimer: 0.1
+  playerCamera: {fileID: 6842085684799101638}
+  specialFov: 120
+  cameraChangeTime: 20
+  wallRunTilt: 20
   tilt: 0
-  startHeight: 0
-  crouchHeight: 0.5
 --- !u!114 &4506919157472255295
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,7 +146,7 @@ Transform:
   m_GameObject: {fileID: 2679820288632538608}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.20000005, z: -3}
+  m_LocalPosition: {x: 0, y: 0.3, z: -3.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -2,137 +2,93 @@ using UnityEngine;
 
 public class ParkourPlayerController : MonoBehaviour
 {
-    CharacterController characterController;
-
+    CharacterController controller;
     public Transform groundCheck;
 
     public LayerMask groundMask;
     public LayerMask wallMask;
-    public Camera playerCamera;
 
-    Vector3 movement;
+    Vector3 move;
     Vector3 input;
     Vector3 Yvelocity;
     Vector3 forwardDirection;
-    Vector3 wallNormal;
-    Vector3 lastWallNormal;
 
-    int jumpStocks = 1;
+    [SerializeField] float speed;
 
-    public bool isGrounded;
-    public bool isSprinting;
-    public bool isCrouching;
-    public bool isSliding;
-    public bool isWallRunning;
-    public bool onLeftWall;
-    public bool onRightWall;
-    public bool hasWallRun = false;
-    public bool isClimibing;
-    public bool canClimb;
-    public bool hasClimbed;
-
-
-   public float normalFOV;
-   public float speed;
-   public float gravity;
-
-    public float wallRunSpeedIncrease;
-    public float wallRunSpeedDecrease;
-    public float slideSpeedIncrease;
-    public float slideSpeedDecrease;
     public float runSpeed;
     public float sprintSpeed;
     public float crouchSpeed;
-    public float airSpeed;
+    public float airSpeedMultiplier;
     public float climbSpeed;
+
+    float gravity;
     public float normalGravity;
     public float wallRunGravity;
     public float jumpHeight;
-   public float slideTimer;
+
+    public float slideSpeedIncrease;
+    public float wallRunSpeedIncrease;
+    public float slideSpeedDecrease;
+    public float wallRunSpeedDecrease;
+
+    int jumpCharges;
+
+    bool isSprinting;
+    bool isCrouching;
+    bool isSliding;
+    bool isWallRunning;
+    bool isGrounded;
+
+    float startHeight;
+    float crouchHeight = 0.5f;
+    float slideTimer;
     public float maxSlideTimer;
-    public float climbTimer;
-    public float MaxClimbTimer;
-    public float specialFOV;
-    public float CameraChange;
-    public float wallRuntilt;
+    Vector3 crouchingCenter = new Vector3(0, 0.5f, 0);
+    Vector3 standingCenter = new Vector3(0, 0, 0);
+
+    bool onLeftWall;
+    bool onRightWall;
+    bool hasWallRun = false;
+    private RaycastHit leftWallHit;
+    private RaycastHit rightWallHit;
+    Vector3 wallNormal;
+    Vector3 lastWall;
+
+    bool isClimbing;
+    bool hasClimbed;
+    bool canClimb;
+    private RaycastHit wallHit;
+
+    float climbTimer;
+    public float maxClimbTimer;
+
+    bool isWallJumping;
+    float wallJumpTimer;
+    public float maxWallJumpTimer;
+
+    public Camera playerCamera;
+    float normalFov;
+    public float specialFov;
+    public float cameraChangeTime;
+    public float wallRunTilt;
     public float tilt;
-    public float startHeight;
-    public float crouchHeight = 0.5f;
 
-    RaycastHit leftWallHit;
-    RaycastHit rightWallHit;
-    RaycastHit WallHit;
-
-
-    Vector3 crouchingCenter = new Vector3 (0, 0.5f, 0);
-    Vector3 standingCenter = new Vector3 (0, 0, 0);
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        controller = GetComponent<CharacterController>();
         startHeight = transform.localScale.y;
-        normalFOV = playerCamera.fieldOfView;
+        jumpCharges = 2;
+        normalFov = playerCamera.fieldOfView;
     }
 
     void IncreaseSpeed(float speedIncrease)
     {
         speed += speedIncrease;
     }
+
     void DecreaseSpeed(float speedDecrease)
     {
         speed -= speedDecrease * Time.deltaTime;
-    }
-    void CameraEffects()
-    {
-        float fov = isWallRunning ? specialFOV : isSliding ? specialFOV : normalFOV;
-        playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, CameraChange * Time.deltaTime);
-
-        if (isWallRunning)
-        {
-            if (onRightWall)
-            {
-                tilt = Mathf.Lerp(tilt, wallRuntilt, CameraChange * Time.deltaTime);
-            }
-            if (onLeftWall)
-            {
-                tilt = Mathf.Lerp(tilt, -wallRuntilt, CameraChange * Time.deltaTime);
-
-            }
-        }
-        if (!isWallRunning) {
-            tilt = Mathf.Lerp(tilt, 0f, CameraChange * Time.deltaTime);
-        }
-    }
-    void HandleInput()
-    {
-        input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
-
-        input = transform.TransformDirection(input);
-        input = Vector3.ClampMagnitude(input, 1f);
-
-        if(Input.GetKeyUp(KeyCode.Space) && jumpStocks > 0)
-        {
-            Jump();
-        }
-
-        if(Input.GetKeyDown(KeyCode.C))
-        {
-            Crouch();
-        }
-        if(Input.GetKeyUp(KeyCode.C))
-        {
-            ExitCrouch();
-        }
-        if(Input.GetKeyDown(KeyCode.LeftShift) && isGrounded)
-        {
-            isSprinting = true;
-        }
-        if(Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            isSprinting = false;
-        }
-
     }
 
     // Update is called once per frame
@@ -145,7 +101,7 @@ public class ParkourPlayerController : MonoBehaviour
         {
             GroundedMovement();
         }
-        else if (!isGrounded && !isWallRunning && !isClimibing)
+        else if (!isGrounded && !isWallRunning && !isClimbing)
         {
             AirMovement();
         }
@@ -154,7 +110,7 @@ public class ParkourPlayerController : MonoBehaviour
             SlideMovement();
             DecreaseSpeed(slideSpeedDecrease);
             slideTimer -= 1f * Time.deltaTime;
-            if (slideTimer < 0)
+            if (slideTimer <= 0)
             {
                 isSliding = false;
             }
@@ -163,142 +119,235 @@ public class ParkourPlayerController : MonoBehaviour
         {
             WallRunMovement();
             DecreaseSpeed(wallRunSpeedDecrease);
+
         }
-        else if (isClimibing)
+        else if (isClimbing)
         {
             ClimbMovement();
             climbTimer -= 1f * Time.deltaTime;
             if (climbTimer < 0)
             {
-                isClimibing = false;
+                isClimbing = false;
                 hasClimbed = true;
             }
         }
-        
-
-            checkGround();
-        characterController.Move(movement * Time.deltaTime);
-        ApplyGravity();
+        controller.Move(move * Time.deltaTime);
         CameraEffects();
+        ApplyGravity();
     }
-    void GroundedMovement()
-    {
-        speed = isSprinting ? sprintSpeed : isCrouching ? crouchSpeed : runSpeed;
 
-        if (input.x != 0)
+    void FixedUpdate()
+    {
+        CheckGround();
+    }
+
+    void CameraEffects()
+    {
+        float fov = isWallRunning ? specialFov : isSliding ? specialFov : normalFov;
+        playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, cameraChangeTime * Time.deltaTime);
+
+        if (isWallRunning)
         {
-            movement.x += input.x * speed;
+            if (onRightWall)
+            {
+                tilt = Mathf.Lerp(tilt, wallRunTilt, cameraChangeTime * Time.deltaTime);
+            }
+            else if (onLeftWall)
+            {
+                tilt = Mathf.Lerp(tilt, -wallRunTilt, cameraChangeTime * Time.deltaTime);
+            }
         }
         else
         {
-            movement.x = 0;
+            tilt = Mathf.Lerp(tilt, 0f, cameraChangeTime * Time.deltaTime);
+        }
+    }
+
+    void HandleInput()
+    {
+        input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
+
+        if (!isWallRunning)
+        {
+            input = transform.TransformDirection(input);
+            input = Vector3.ClampMagnitude(input, 1f);
         }
 
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            Crouch();
+        }
+        if (Input.GetKeyUp(KeyCode.C))
+        {
+            ExitCrouch();
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && isGrounded)
+        {
+            isSprinting = true;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            isSprinting = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.Space) && jumpCharges > 0)
+        {
+            Jump();
+        }
+    }
+
+    void CheckGround()
+    {
+        isGrounded = Physics.CheckSphere(groundCheck.position, 0.25f, groundMask);
+        if (isGrounded)
+        {
+            jumpCharges = 1;
+            hasWallRun = false;
+            hasClimbed = false;
+            climbTimer = maxClimbTimer;
+        }
+    }
+
+    void CheckWallRun()
+    {
+        onRightWall = Physics.Raycast(transform.position, transform.right, out rightWallHit, 0.7f, wallMask);
+        onLeftWall = Physics.Raycast(transform.position, -transform.right, out leftWallHit, 0.7f, wallMask);
+
+        if ((onRightWall || onLeftWall) && !isWallRunning)
+        {
+            TestWallRun();
+        }
+        else if (!onRightWall && !onLeftWall && isWallRunning)
+        {
+            ExitWallRun();
+        }
+    }
+
+    void CheckClimbing()
+    {
+        canClimb = Physics.Raycast(transform.position, transform.forward, out wallHit, 0.7f, wallMask);
+        float wallAngle = Vector3.Angle(-wallHit.normal, transform.forward);
+        if (wallAngle < 15 && canClimb && !hasClimbed)
+        {
+            isClimbing = true;
+        }
+        else
+        {
+            isClimbing = false;
+        }
+    }
+
+    void GroundedMovement()
+    {
+        speed = isSprinting ? sprintSpeed : isCrouching ? crouchSpeed : runSpeed;
+        if (input.x != 0)
+        {
+            move.x += input.x * speed;
+        }
+        else
+        {
+            move.x = 0;
+        }
         if (input.z != 0)
         {
-            movement.z += input.z * speed;
+            move.z += input.z * speed;
         }
-        else { 
-            movement.z = 0;
+        else
+        {
+            move.z = 0;
         }
 
-        movement = Vector3.ClampMagnitude(movement, speed);
+        move = Vector3.ClampMagnitude(move, speed);
     }
 
     void AirMovement()
     {
-        movement.x += input.x * airSpeed;
-        movement.z += input.z * airSpeed;
+        move.x += input.x * airSpeedMultiplier;
+        move.z += input.z * airSpeedMultiplier;
+        if (isWallJumping)
+        {
+            move += forwardDirection * airSpeedMultiplier;
+            wallJumpTimer -= 1f * Time.deltaTime;
+            if (wallJumpTimer <= 0)
+            {
+                isWallJumping = false;
+            }
+        }
 
-        movement = Vector3.ClampMagnitude(movement, speed);
-
+        move = Vector3.ClampMagnitude(move, speed);
     }
 
     void SlideMovement()
     {
-        movement += forwardDirection;
-        movement = Vector3.ClampMagnitude(movement, speed);
-           
+        move += forwardDirection;
+        move = Vector3.ClampMagnitude(move, speed);
     }
 
     void WallRunMovement()
     {
-        if (input.z > (forwardDirection.z - 10f) && input.z < (forwardDirection.z +10f))
+        if (input.z > (forwardDirection.z - 10f) && input.z < (forwardDirection.z + 10f))
         {
-            movement += forwardDirection;
+            move += forwardDirection;
         }
-        else if (input.z <  (forwardDirection.z - 10f) && input.z > (forwardDirection.z + 10f))
+        else if (input.z < (forwardDirection.z - 10f) && input.z > (forwardDirection.z + 10f))
         {
-            movement.x = 0f;
-            movement.z = 0f;
+            move.x = 0;
+            move.z = 0;
             ExitWallRun();
-
         }
-        movement.x += input.x * airSpeed;
-        movement = Vector3.ClampMagnitude(movement, speed);
+        move.x += input.x * airSpeedMultiplier;
+
+        move = Vector3.ClampMagnitude(move, speed);
     }
 
-    void ClimbMovement() 
+    void ClimbMovement()
     {
-    forwardDirection = Vector3.up;
-        movement.x += input.x * airSpeed;
-        movement.z += input.z * airSpeed;
+        forwardDirection = Vector3.up;
+        move.x += input.x * airSpeedMultiplier;
+        move.z += input.z * airSpeedMultiplier;
 
         Yvelocity += forwardDirection;
         speed = climbSpeed;
 
-        movement = Vector3.ClampMagnitude(movement, speed);
+        move = Vector3.ClampMagnitude(move, speed);
         Yvelocity = Vector3.ClampMagnitude(Yvelocity, speed);
     }
 
-    void checkGround()
+    void Crouch()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, 0.2f, groundMask);
-        if (isGrounded) 
+        controller.height = crouchHeight;
+        controller.center = crouchingCenter;
+        transform.localScale = new Vector3(transform.localScale.x, crouchHeight, transform.localScale.z);
+        if (speed > runSpeed)
         {
-            jumpStocks = 1;
-            hasWallRun = false;
-            hasClimbed = false;
-            climbTimer = MaxClimbTimer;
+            isSliding = true;
+            forwardDirection = transform.forward;
+            if (isGrounded)
+            {
+                IncreaseSpeed(slideSpeedIncrease);
+            }
+            slideTimer = maxSlideTimer;
         }
+        isCrouching = true;
     }
 
-    void CheckWallRun() 
+    void ExitCrouch()
     {
-        onLeftWall = Physics.Raycast(transform.position, -transform.right, out leftWallHit, 0.7f, wallMask);
-        onRightWall = Physics.Raycast(-transform.position, -transform.right, out rightWallHit, 0.7f, wallMask);
-
-        if((onRightWall || onLeftWall) && !isWallRunning)
-        {
-            TestWallRun();
-        }
-        if((!onRightWall || !onLeftWall) && isWallRunning)
-        {
-            ExitWallRun();
-        }
-
-    }
-
-    void CheckClimbing() 
-    {
-        canClimb = Physics.Raycast(transform.position, transform.forward, out WallHit, 0.7f, wallMask);
-        float wallAngle = Vector3.Angle(-WallHit.normal, transform.forward);
-        if (wallAngle > 15 && !hasClimbed && canClimb) 
-        {
-        isClimibing = true;
-        }
-        else 
-        {
-        isClimibing = false;
-        }
+        controller.height = (startHeight * 2);
+        controller.center = standingCenter;
+        transform.localScale = new Vector3(transform.localScale.x, startHeight, transform.localScale.z);
+        isCrouching = false;
+        isSliding = false;
     }
 
     void TestWallRun()
     {
-        wallNormal = onLeftWall ? leftWallHit.normal : rightWallHit.normal;
+        wallNormal = onRightWall ? rightWallHit.normal : leftWallHit.normal;
         if (hasWallRun)
         {
-            float wallAngle = Vector3.Angle(wallNormal, lastWallNormal);
+            float wallAngle = Vector3.Angle(wallNormal, lastWall);
             if (wallAngle > 15)
             {
                 WallRun();
@@ -306,82 +355,55 @@ public class ParkourPlayerController : MonoBehaviour
         }
         else
         {
-            WallRun(); 
             hasWallRun = true;
+            WallRun();
         }
-    }
-    void ApplyGravity()
-    {
-        gravity = isWallRunning ? wallRunGravity : isClimibing ? 0f : normalGravity;
-        Yvelocity.y += gravity * Time.deltaTime;
-        characterController.Move(Yvelocity * Time.deltaTime);
-    }
-    void Jump()
-    {
-        if (!isGrounded && !isWallRunning ) 
-        {
-            jumpStocks -= 1;
-        }
-        else if (isWallRunning)
-        {
-            ExitWallRun();
-            IncreaseSpeed(wallRunSpeedIncrease);
-        }
-            hasClimbed = false;
-            climbTimer = MaxClimbTimer;
-            Yvelocity.y = Mathf.Sqrt(jumpHeight * -2f * normalGravity);
-    }
-
-    void Crouch()
-    {
-        characterController.height = crouchHeight;
-        characterController.center = crouchingCenter;
-        transform.localScale = new Vector3(transform.localScale.x, crouchHeight, transform.localScale.z);
-        isCrouching = true;
-        if (speed > runSpeed)
-        {
-            isSliding = true;
-            forwardDirection = transform.forward;
-            if (isGrounded)
-            {
-            IncreaseSpeed(slideSpeedIncrease);
-            }
-
-            slideTimer = maxSlideTimer;
-        }
-    }
-    void ExitCrouch()
-    {
-        characterController.height = startHeight * 2;
-        characterController.center = standingCenter;
-        transform.localScale = new Vector3(transform.localScale.x, startHeight, transform.localScale.z);
-        isCrouching = false;
-        isSliding = false;
     }
 
     void WallRun()
     {
         isWallRunning = true;
-        jumpStocks = 1;
+        jumpCharges = 1;
         IncreaseSpeed(wallRunSpeedIncrease);
         Yvelocity = new Vector3(0f, 0f, 0f);
 
-        
         forwardDirection = Vector3.Cross(wallNormal, Vector3.up);
 
         if (Vector3.Dot(forwardDirection, transform.forward) < 0)
         {
             forwardDirection = -forwardDirection;
         }
-
     }
 
     void ExitWallRun()
     {
         isWallRunning = false;
-        lastWallNormal = wallNormal;
+        lastWall = wallNormal;
+        forwardDirection = wallNormal;
+        IncreaseSpeed(wallRunSpeedIncrease);
+        isWallJumping = true;
+        wallJumpTimer = maxWallJumpTimer;
     }
 
+    void Jump()
+    {
+        if (!isGrounded && !isWallRunning)
+        {
+            jumpCharges -= 1;
+        }
+        else if (isWallRunning)
+        {
+            ExitWallRun();
+        }
+        hasClimbed = false;
+        climbTimer = maxClimbTimer;
+        Yvelocity.y = Mathf.Sqrt(jumpHeight * -2f * normalGravity);
+    }
 
+    void ApplyGravity()
+    {
+        gravity = isWallRunning ? wallRunGravity : isClimbing ? 0f : normalGravity;
+        Yvelocity.y += gravity * Time.deltaTime;
+        controller.Move(Yvelocity * Time.deltaTime);
+    }
 }
-
