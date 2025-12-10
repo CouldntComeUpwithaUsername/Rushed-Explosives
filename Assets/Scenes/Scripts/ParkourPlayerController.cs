@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ParkourPlayerController : MonoBehaviour
 {
@@ -94,6 +95,10 @@ public class ParkourPlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene("BombRush");
+        }
         HandleInput();
         CheckWallRun();
         CheckClimbing();
